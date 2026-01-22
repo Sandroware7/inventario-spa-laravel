@@ -30,7 +30,7 @@ class Productos extends Component
             'nombre' => 'required|string|min:3',
             'precio' => 'required|numeric|min:1',
             'stock'  => 'required|integer|min:0',
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
         ];
     }
 
@@ -39,7 +39,7 @@ class Productos extends Component
         'precio.required' => 'El precio es obligatorio.',
         'stock.required' => 'El stock es obligatorio.',
         'imagen.image' => 'El archivo debe ser una imagen válida.',
-        'imagen.max' => 'La imagen no debe pesar más de 2MB.',
+        'imagen.max' => 'La imagen es muy pesada (Máximo 10MB).',
     ];
 
     public function mount()
@@ -101,6 +101,7 @@ class Productos extends Component
     {
         $this->validate([
             'nombre' => 'required|string|min:3',
+            'nombre.min' => 'El nombre es muy corto (mínimo 3 caracteres).',
             'precio' => 'required|numeric|min:1',
             'stock'  => 'required|integer|min:0',
             'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
