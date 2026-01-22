@@ -3,156 +3,195 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 use App\Models\Producto;
+use App\Models\Categoria;
+use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 
 class Productos extends Component
 {
     use WithFileUploads;
+    use WithPagination;
 
-    public $productos;
+    public $nombre, $precio, $stock, $producto_id, $imagen, $imagen_nueva;
+    public $categoria_id;
+    public $busqueda = '';
+    public $isModalOpen = 0;
 
-    public $nombre = '';
-    public $precio = '';
-    public $stock = '';
+    public $filtroSinStock = false;
+    public $filtroBajoStock = false;
+    public $filtroCategoria = '';
 
-    public $imagen;
-
-    public $imagen_actual;
-
-    public $productoId = null;
-    public $modoEdicion = false;
-
-    protected function rules()
+    public function updatingBusqueda()
     {
-        return [
-            'nombre' => 'required|string|min:3',
-            'precio' => 'required|numeric|min:1',
-            'stock'  => 'required|integer|min:0',
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
-        ];
+        $this->resetPage();
     }
 
-    protected $messages = [
-        'nombre.required' => 'El nombre es obligatorio.',
-        'precio.required' => 'El precio es obligatorio.',
-        'stock.required' => 'El stock es obligatorio.',
-        'imagen.image' => 'El archivo debe ser una imagen válida.',
-        'imagen.max' => 'La imagen es muy pesada (Máximo 10MB).',
-    ];
-
-    public function mount()
+    public function updatingFiltroCategoria()
     {
-        $this->cargarProductos();
+        $this->resetPage();
     }
 
-    public function cargarProductos()
+    public function toggleFiltroSinStock()
     {
-        $this->productos = Producto::orderBy('created_at', 'desc')->get();
+        $this->filtroSinStock = !$this->filtroSinStock;
+        $this->filtroBajoStock = false;
+        $this->resetPage();
     }
 
-
-    public function guardar()
+    public function toggleFiltroBajoStock()
     {
-        $this->validate([
-            'nombre' => 'required|string|min:3',
-            'precio' => 'required|numeric|min:1',
-            'stock'  => 'required|integer|min:1',
-            'imagen' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-
-        try {
-            $rutaImagen = $this->imagen->store('productos', 'public');
-
-            Producto::create([
-                'nombre' => $this->nombre,
-                'precio' => $this->precio,
-                'stock'  => $this->stock,
-                'imagen' => $rutaImagen,
-            ]);
-
-            $this->resetFormulario();
-            $this->cargarProductos();
-            session()->flash('success', 'Producto creado exitosamente.');
-
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error al subir la imagen: ' . $e->getMessage());
-        }
-    }
-
-
-    public function editar($id)
-    {
-        $producto = Producto::findOrFail($id);
-
-        $this->productoId = $producto->id;
-        $this->nombre = $producto->nombre;
-        $this->precio = $producto->precio;
-        $this->stock = $producto->stock;
-        $this->imagen_actual = $producto->imagen;
-        $this->imagen = null;
-
-        $this->modoEdicion = true;
-    }
-
-
-    public function actualizar()
-    {
-        $this->validate([
-            'nombre' => 'required|string|min:3',
-            'nombre.min' => 'El nombre es muy corto (mínimo 3 caracteres).',
-            'precio' => 'required|numeric|min:1',
-            'stock'  => 'required|integer|min:0',
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-
-        $producto = Producto::findOrFail($this->productoId);
-
-        $datos = [
-            'nombre' => $this->nombre,
-            'precio' => $this->precio,
-            'stock'  => $this->stock,
-        ];
-
-        if ($this->imagen) {
-            if ($producto->imagen && Storage::disk('public')->exists($producto->imagen)) {
-                Storage::disk('public')->delete($producto->imagen);
-            }
-
-            $datos['imagen'] = $this->imagen->store('productos', 'public');
-        }
-
-        $producto->update($datos);
-
-        $this->resetFormulario();
-        $this->cargarProductos();
-        session()->flash('success', 'Producto actualizado correctamente.');
-    }
-
-
-    public function eliminar($id)
-    {
-        $producto = Producto::findOrFail($id);
-
-        if ($producto->imagen && Storage::disk('public')->exists($producto->imagen)) {
-            Storage::disk('public')->delete($producto->imagen);
-        }
-
-        $producto->delete();
-
-        $this->cargarProductos();
-        session()->flash('success', 'Producto eliminado.');
-    }
-
-    public function resetFormulario()
-    {
-        $this->reset(['nombre', 'precio', 'stock', 'imagen', 'productoId', 'modoEdicion', 'imagen_actual']);
-        $this->dispatch('limpiar-input-file');
+        $this->filtroBajoStock = !$this->filtroBajoStock;
+        $this->filtroSinStock = false;
+        $this->resetPage();
     }
 
     public function render()
     {
-        return view('livewire.productos')->layout('layouts.app');
+        $query = Producto::query();
+
+        if ($this->busqueda) {
+            $query->where(function($q) {
+                $q->where('nombre', 'like', '%' . $this->busqueda . '%')
+                    ->orWhere('stock', 'like', '%' . $this->busqueda . '%');
+            });
+        }
+
+        if ($this->filtroCategoria) {
+            $query->where('categoria_id', $this->filtroCategoria);
+        }
+
+        if ($this->filtroSinStock) {
+            $query->where('stock', 0);
+        } elseif ($this->filtroBajoStock) {
+            $query->where('stock', '>', 0)->where('stock', '<', 5);
+        }
+
+        $productos = $query->orderBy('created_at', 'desc')->paginate(5);
+
+        $categorias = Categoria::all();
+
+        $todosLosProductos = Producto::all();
+        $totalProductos = $todosLosProductos->count();
+        $productosSinStock = $todosLosProductos->where('stock', 0)->count();
+        $productosBajoStock = $todosLosProductos->where('stock', '>', 0)->where('stock', '<', 5)->count();
+
+        $valorInventario = $todosLosProductos->sum(function ($prod) {
+            return $prod->precio * $prod->stock;
+        });
+
+        return view('livewire.productos', compact(
+            'productos',
+            'categorias',
+            'totalProductos',
+            'productosSinStock',
+            'productosBajoStock',
+            'valorInventario'
+        ));
+    }
+
+    public function create()
+    {
+        $this->resetInputFields();
+        $this->openModal();
+    }
+
+    public function openModal()
+    {
+        $this->isModalOpen = true;
+    }
+
+    public function closeModal()
+    {
+        $this->isModalOpen = false;
+    }
+
+    public function resetInputFields()
+    {
+        $this->nombre = '';
+        $this->precio = '';
+        $this->stock = '';
+        $this->categoria_id = '';
+        $this->producto_id = null;
+        $this->imagen = null;
+        $this->imagen_nueva = null;
+    }
+
+    public function store()
+    {
+        $this->validate([
+            'nombre' => 'required',
+            'precio' => 'required|numeric',
+            'stock' => 'required|integer',
+            'categoria_id' => 'required',
+            'imagen' => 'nullable|image|max:10240',
+        ]);
+
+        $imagePath = null;
+        if ($this->imagen) {
+            $imagePath = $this->imagen->store('productos', 'public');
+        }
+
+        Producto::create([
+            'nombre' => $this->nombre,
+            'precio' => (float) $this->precio,
+            'stock' => (int) $this->stock,
+            'categoria_id' => $this->categoria_id,
+            'imagen' => $imagePath
+        ]);
+
+        session()->flash('message', 'Producto creado exitosamente.');
+        $this->closeModal();
+        $this->resetInputFields();
+    }
+
+    public function edit($id)
+    {
+        $producto = Producto::findOrFail($id);
+        $this->producto_id = $id;
+        $this->nombre = $producto->nombre;
+        $this->precio = $producto->precio;
+        $this->stock = $producto->stock;
+        $this->categoria_id = $producto->categoria_id;
+        $this->imagen = $producto->imagen;
+
+        $this->openModal();
+    }
+
+    public function update()
+    {
+        $this->validate([
+            'nombre' => 'required',
+            'precio' => 'required|numeric',
+            'stock' => 'required|integer',
+            'categoria_id' => 'required',
+            'imagen_nueva' => 'nullable|image|max:10240',
+        ]);
+
+        $producto = Producto::find($this->producto_id);
+
+        $data = [
+            'nombre' => $this->nombre,
+            'precio' => (float) $this->precio,
+            'stock' => (int) $this->stock,
+            'categoria_id' => $this->categoria_id
+        ];
+
+        if ($this->imagen_nueva) {
+            $data['imagen'] = $this->imagen_nueva->store('productos', 'public');
+        }
+
+        $producto->update($data);
+
+        session()->flash('message', 'Producto actualizado exitosamente.');
+        $this->closeModal();
+        $this->resetInputFields();
+    }
+
+    public function delete($id)
+    {
+        Producto::find($id)->delete();
+        session()->flash('message', 'Producto eliminado exitosamente.');
     }
 }
