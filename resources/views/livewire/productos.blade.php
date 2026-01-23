@@ -13,7 +13,7 @@
         <div class="col-md-4">
             <div class="card h-100 shadow-sm" style="background-color: #336816; color: white;">                <div class="card-body text-center">
                     <h5 class="card-title">Valor Inventario</h5>
-                    <p class="display-6 fw-bold mb-0">${{ number_format($valorInventario, 2) }}</p>
+                    <p class="display-6 fw-bold mb-0">S/ {{ number_format($valorInventario, 2) }}</p>
                 </div>
             </div>
         </div>
@@ -74,7 +74,7 @@
                 <div class="col-md-3">
                     <label class="form-label">Precio</label>
                     <div class="input-group">
-                        <span class="input-group-text">$</span>
+                        <span class="input-group-text">S/</span>
                         <input type="number" step="0.01" wire:model="precio" class="form-control @error('precio') is-invalid @enderror" placeholder="0.00">
                         @error('precio') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -189,7 +189,7 @@
                                 @endif
                             </td>
                             <td class="fw-medium">{{ $producto->nombre }}</td>
-                            <td>${{ number_format($producto->precio, 2) }}</td>
+                            <td>S/ {{ number_format($producto->precio, 2) }}</td>
                             <td>
                                 <span class="badge {{ $producto->stock == 0 ? 'text-bg-danger' : ($producto->stock < 5 ? 'text-bg-warning' : 'text-bg-secondary') }}">
                                     {{ $producto->stock }}
