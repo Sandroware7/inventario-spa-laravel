@@ -23,7 +23,13 @@ class Register extends Component
             'codigo_trabajador' => 'required'
         ]);
 
-        if ($this->codigo_trabajador !== env('CODIGO_REGISTRO_CAJERO')) {
+        $rol_asignado = '';
+
+        if ($this->codigo_trabajador === env('CODIGO_ADMIN')) {
+            $rol_asignado = 'admin';
+        } elseif ($this->codigo_trabajador === env('CODIGO_CAJERO')) {
+            $rol_asignado = 'cajero';
+        } else {
             $this->addError('codigo_trabajador', 'El código de trabajador es incorrecto.');
             return;
         }
@@ -32,6 +38,7 @@ class Register extends Component
             'name' => $this->name,
             'email' => $this->email,
             'password' => Hash::make($this->password),
+            'role' => $rol_asignado,
         ]);
 
         Auth::login($user);

@@ -3,7 +3,8 @@
 
     <div class="row g-3 mb-4">
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm" style="background-color: #015e83; color: white;">                <div class="card-body text-center">
+            <div class="card h-100 shadow-sm" style="background-color: #015e83; color: white;">
+                <div class="card-body text-center">
                     <h5 class="card-title">Total Productos</h5>
                     <p class="display-6 fw-bold mb-0">{{ $totalProductos }}</p>
                 </div>
@@ -11,7 +12,8 @@
         </div>
 
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm" style="background-color: #336816; color: white;">                <div class="card-body text-center">
+            <div class="card h-100 shadow-sm" style="background-color: #336816; color: white;">
+                <div class="card-body text-center">
                     <h5 class="card-title">Valor Inventario</h5>
                     <p class="display-6 fw-bold mb-0">S/ {{ number_format($valorInventario, 2) }}</p>
                 </div>
@@ -58,85 +60,88 @@
         </div>
     @endif
 
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">{{ $producto_id ? 'Editar Producto' : 'Nuevo Producto' }}</h5>
-        </div>
-        <div class="card-body">
-            <form wire:submit.prevent="{{ $producto_id ? 'update' : 'store' }}" class="row g-3">
+    @if(auth()->user()->role === 'admin')
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">{{ $producto_id ? 'Editar Producto' : 'Nuevo Producto' }}</h5>
+            </div>
+            <div class="card-body">
+                <form wire:submit.prevent="{{ $producto_id ? 'update' : 'store' }}" class="row g-3">
 
-                <div class="col-md-6">
-                    <label class="form-label">Nombre del Producto</label>
-                    <input type="text" wire:model="nombre" class="form-control @error('nombre') is-invalid @enderror" placeholder="Ej: Teclado Razer">
-                    @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label">Precio</label>
-                    <div class="input-group">
-                        <span class="input-group-text">S/</span>
-                        <input type="number" step="0.01" wire:model="precio" class="form-control @error('precio') is-invalid @enderror" placeholder="0.00">
-                        @error('precio') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label">Stock</label>
-                    <input type="number" wire:model="stock" class="form-control @error('stock') is-invalid @enderror" placeholder="0">
-                    @error('stock') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Categoría</label>
-                    <select wire:model="categoria_id" class="form-select @error('categoria_id') is-invalid @enderror">
-                        <option value="">Seleccione...</option>
-                        @foreach($categorias as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->nombre }}</option>
-                        @endforeach
-                    </select>
-                    @error('categoria_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Imagen</label>
-                    <input type="file" wire:model="{{ $producto_id ? 'imagen_nueva' : 'imagen' }}" id="upload-{{ $iteration ?? 0 }}" class="form-control">
-
-                    <div wire:loading wire:target="imagen, imagen_nueva" class="text-primary mt-2">
-                        <small>Cargando imagen...</small>
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre del Producto</label>
+                        <input type="text" wire:model="nombre" class="form-control @error('nombre') is-invalid @enderror" placeholder="Ej: Teclado Razer">
+                        @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    @if ($imagen_nueva)
-                        <div class="mt-2">
-                            <img src="{{ $imagen_nueva->temporaryUrl() }}" class="img-thumbnail" style="height: 80px;">
+                    <div class="col-md-3">
+                        <label class="form-label">Precio</label>
+                        <div class="input-group">
+                            <span class="input-group-text">S/</span>
+                            <input type="number" step="0.01" wire:model="precio" class="form-control @error('precio') is-invalid @enderror" placeholder="0.00">
+                            @error('precio') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                    @elseif ($imagen && !$producto_id)
-                        <div class="mt-2">
-                            <img src="{{ $imagen->temporaryUrl() }}" class="img-thumbnail" style="height: 80px;">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Stock</label>
+                        <input type="number" wire:model="stock" class="form-control @error('stock') is-invalid @enderror" placeholder="0">
+                        @error('stock') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Categoría</label>
+                        <select wire:model="categoria_id" class="form-select @error('categoria_id') is-invalid @enderror">
+                            <option value="">Seleccione...</option>
+                            @foreach($categorias as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('categoria_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Imagen</label>
+                        <input type="file" wire:model="{{ $producto_id ? 'imagen_nueva' : 'imagen' }}" id="upload-{{ $iteration ?? 0 }}" class="form-control">
+
+                        <div wire:loading wire:target="imagen, imagen_nueva" class="text-primary mt-2">
+                            <small>Cargando imagen...</small>
                         </div>
-                    @elseif ($producto_id && $imagen)
-                        <div class="mt-2">
-                            <img src="{{ asset('storage/' . $imagen) }}" class="img-thumbnail" style="height: 80px;">
-                        </div>
-                    @endif
 
-                    @error('imagen') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-                    @error('imagen_nueva') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-                </div>
+                        @if ($imagen_nueva)
+                            <div class="mt-2">
+                                <img src="{{ $imagen_nueva->temporaryUrl() }}" class="img-thumbnail" style="height: 80px;">
+                            </div>
+                        @elseif ($imagen && !$producto_id)
+                            <div class="mt-2">
+                                <img src="{{ $imagen->temporaryUrl() }}" class="img-thumbnail" style="height: 80px;">
+                            </div>
+                        @elseif ($producto_id && $imagen)
+                            <div class="mt-2">
+                                <img src="{{ asset('storage/' . $imagen) }}" class="img-thumbnail" style="height: 80px;">
+                            </div>
+                        @endif
 
-                <div class="col-12 text-end">
-                    @if ($producto_id)
-                        <button type="button" wire:click="resetInputFields" class="btn btn-secondary me-2">Cancelar</button>
-                        <button type="submit" class="btn text-white" style="background-color: #c68800; border-color: #bd7903;">Actualizar Producto</button>                    @else
-                        <button type="submit" class="btn btn-primary">Guardar Producto</button>
-                    @endif
+                        @error('imagen') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                        @error('imagen_nueva') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    </div>
 
-                    <span wire:loading wire:target="store, update" class="ms-2 text-muted">
+                    <div class="col-12 text-end">
+                        @if ($producto_id)
+                            <button type="button" wire:click="resetInputFields" class="btn btn-secondary me-2">Cancelar</button>
+                            <button type="submit" class="btn text-white" style="background-color: #c68800; border-color: #bd7903;">Actualizar Producto</button>
+                        @else
+                            <button type="submit" class="btn btn-primary">Guardar Producto</button>
+                        @endif
+
+                        <span wire:loading wire:target="store, update" class="ms-2 text-muted">
                         Procesando...
                     </span>
-                </div>
-            </form>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
+    @endif
 
     @if($filtroSinStock)
         <div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert">
@@ -206,19 +211,23 @@
                                 </span>
                             </td>
                             <td class="text-end pe-3">
-                                <button wire:click="edit('{{ $producto->id }}')"
-                                        class="btn btn-sm text-white me-1"
-                                        style="background-color: #4279c1; border-color: #0e3965;">
-                                    Editar
-                                </button>
+                                @if(auth()->user()->role === 'admin')
+                                    <button wire:click="edit('{{ $producto->id }}')"
+                                            class="btn btn-sm text-white me-1"
+                                            style="background-color: #4279c1; border-color: #0e3965;">
+                                        Editar
+                                    </button>
 
-                                <button
-                                    wire:click="delete('{{ $producto->id }}')"
-                                    onclick="confirm('¿Seguro que deseas eliminar este producto?') || event.stopImmediatePropagation()"
-                                    class="btn btn-sm text-white"
-                                    style="background-color: #c32828; border-color: #7c0000;">
-                                    Eliminar
-                                </button>
+                                    <button
+                                        wire:click="delete('{{ $producto->id }}')"
+                                        onclick="confirm('¿Seguro que deseas eliminar este producto?') || event.stopImmediatePropagation()"
+                                        class="btn btn-sm text-white"
+                                        style="background-color: #c32828; border-color: #7c0000;">
+                                        Eliminar
+                                    </button>
+                                @else
+                                    <span class="badge bg-secondary">Solo Lectura</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
