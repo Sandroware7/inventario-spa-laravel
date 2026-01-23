@@ -5,6 +5,18 @@
 
             <form wire:submit="register">
                 <div class="mb-3">
+                    <label class="form-label fw-bold text-primary">Código de Trabajador</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-primary text-white"><i class="bi bi-shield-lock"></i></span>
+                        <input type="password" wire:model="codigo_trabajador" class="form-control" placeholder="Ingrese código de autorización">
+                    </div>
+                    @error('codigo_trabajador') <span class="text-danger small fw-bold">{{ $message }}</span> @enderror
+                    <div class="form-text text-muted" style="font-size: 0.8rem;">Solicite este código al administrador.</div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="mb-3">
                     <label class="form-label">Nombre del Cajero</label>
                     <input type="text" wire:model="name" class="form-control" placeholder="">
                     @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
